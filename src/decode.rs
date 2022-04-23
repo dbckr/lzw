@@ -676,9 +676,11 @@ impl<C: CodeBuffer> Stateful for DecodeState<C> {
                             self.has_ended = true;
                             status = Ok(LzwStatus::Done);
                         } else if self.table.is_empty() {
-                            // We require an explicit reset.
-                            // TODO: allow this to be configured and do the setup implicitly.
-                            status = Err(LzwError::InvalidCode);
+                            // Does not begin with a clear code
+                            self.init_tables();
+                            self.buffer.fill_reconstruct(&self.table, init_code);
+                            let link = self.table.at(init_code).clone();
+                            code_link = Some((init_code, link));
                         } else {
                             // Reconstruct the first code in the buffer.
                             self.buffer.fill_reconstruct(&self.table, init_code);
